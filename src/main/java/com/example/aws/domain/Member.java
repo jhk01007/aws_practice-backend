@@ -1,4 +1,4 @@
-package com.example.aws;
+package com.example.aws.domain;
 
 import jakarta.persistence.*;
 import lombok.Data;
