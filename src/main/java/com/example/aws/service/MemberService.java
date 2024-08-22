@@ -39,7 +39,7 @@ public class MemberService {
      */
     public Member login(String userId, String password) {
         Optional<Member> loginMember = memberRepository.findByMemberId(userId);
-        if(loginMember.isEmpty()) throw new MemberNotFoundException("아이디가 틀립니다.");
+        if(loginMember.isEmpty()) throw new MemberNotFoundException("아이디가 존재하지 않습니다.");
 
         if(!loginMember.get().getPassword().equals(password)) throw new PasswordErrorException("비밀번호가 틀립니다.");
 
