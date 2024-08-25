@@ -11,7 +11,7 @@ import java.util.Optional;
 @Service
 public class MemberService {
 
-    private MemberRepository memberRepository;
+    private final MemberRepository memberRepository;
 
 
     public MemberService(MemberRepository memberRepository) {
@@ -38,21 +38,21 @@ public class MemberService {
      * 로그인 하기
      */
     public Member login(String userId, String password) {
-        Optional<Member> loginMember = memberRepository.findByMemberId(userId);
-        if(loginMember.isEmpty()) throw new MemberNotFoundException("아이디가 존재하지 않습니다.");
+       Member loginMember = memberRepository.findByMemberId(userId)
+                .orElseThrow(() -> new MemberNotFoundException("아아디가 존재하지 않습니다."));
 
-        if(!loginMember.get().getPassword().equals(password)) throw new PasswordErrorException("비밀번호가 틀립니다.");
 
-        return loginMember.get();
+        if(!loginMember.getPassword().equals(password)) throw new PasswordErrorException("비밀번호가 틀립니다.");
+
+        return loginMember;
     }
 
     /**
      * 회원정보 가져오기
      */
     public Member getMemberInfo(Long id) {
-        Optional<Member> findMember = memberRepository.findById(id);
-        if(findMember.isEmpty()) throw new MemberNotFoundException("해당 회원을 찾을 수 없습니다.");
-        return findMember.get();
+        return memberRepository.findById(id)
+                .orElseThrow(() -> new MemberNotFoundException("해당 회원을 찾을 수 없습니다."));
     }
 
 
