@@ -8,5 +8,5 @@ import lombok.Data;
 public class MemberDTO {
     private String memberId;
     private String phoneNum;
-    private String image; // base64 인코딩
+    private String image; // s3상의 이미지 url
 }
