@@ -3,18 +3,12 @@ package com.example.aws.controller;
 import com.example.aws.domain.Member;
 import com.example.aws.dto.*;
 import com.example.aws.exception.MemberIdDuplicateException;
-import com.example.aws.exception.MemberNotFoundException;
-import com.example.aws.exception.PasswordErrorException;
 import com.example.aws.service.MemberService;
 import com.example.aws.service.S3Service;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/members")
@@ -30,24 +24,23 @@ public class MemberController {
 
     /**
      * 회원가입
+     * 이미지를 MultipartFile 형식으로 받기위해 form 형식으로 받음
      */
     @PostMapping("/signup")
-    public ResponseEntity<String> signUp(@RequestBody SignupDTO signupDTO) {
+    public ResponseEntity<String> signUp(@ModelAttribute SignupDTO signupDTO) {
         String memberId = signupDTO.getMemberId();
         String password = signupDTO.getPassword();
         String phone_num = signupDTO.getPhoneNum();
-        String image = signupDTO.getImage();
-        String s3Url = null;
-        if(image!= null)
-            s3Url = s3Service.uploadImage(image);
+        MultipartFile image = signupDTO.getImage();
 
-        memberService.signup(new Member(memberId, password, phone_num, s3Url));
+        Member sigupMember = memberService.signup(new Member(memberId, password, phone_num));
+        if(image!= null) s3Service.uploadImage(image, sigupMember.getId());
+
         return ResponseEntity.ok("SIGNUP_SUCCESS");
     }
 
     /**
      * 아이디 중복체크
-     * json 형식으로 데이터를 받기 위해 맵 형태로 받음
      */
     @PostMapping("/checkIdDuplicate")
     public ResponseEntity<Object> checkIdDuplicate(@RequestBody CheckIdDTO checkIdDTO) {
@@ -63,8 +56,10 @@ public class MemberController {
      * 로그인
      */
     @PostMapping("/login")
-    public ResponseEntity<Object> login(@RequestBody LoginDTO loginDto) {
-        memberService.login(loginDto.getMemberId(), loginDto.getPassword());
+    public ResponseEntity<Object> login(@RequestBody LoginDTO loginDto, HttpSession session) {
+        Member loginMember = memberService.login(loginDto.getMemberId(), loginDto.getPassword());
+        session.setAttribute("member", loginMember.getId());
+
         return ResponseEntity.ok("LOGIN_SUCCESS");
     }
 
@@ -72,10 +67,10 @@ public class MemberController {
      * 프로필 사진  변경
      */
     @PostMapping("/changeProfile")
-    public ResponseEntity<String> changeProfileImage(@RequestBody ChangeProfileImageDTO imageDTO, HttpSession session) {
-        String image = imageDTO.getImage();
-        Long login_id = (Long) session.getAttribute("login");
-        String newImgUrl = s3Service.editProfileImg(login_id, image);
+    public ResponseEntity<String> changeProfileImage(@ModelAttribute ChangeProfileImageDTO imageDTO, HttpSession session) {
+        MultipartFile image = imageDTO.getImage();
+        Long login_id = (Long) session.getAttribute("member");
+        String newImgUrl = s3Service.uploadImage(image, login_id);
 
         return ResponseEntity.ok(newImgUrl);
     }
@@ -83,12 +78,12 @@ public class MemberController {
     /**
      * 회원 정보(아이디, 전화번호, 프로필 사진) 조회
      */
-    @GetMapping("/memberInfo/{id}")
-    public MemberDTO getMemberInfo(@PathVariable("id") Long id) {
+    @GetMapping("/memberInfo")
+    public MemberDTO getMemberInfo(HttpSession session) {
+        Long id = (Long) session.getAttribute("member");
         Member memberInfo = memberService.getMemberInfo(id);
-        MemberDTO memberDTO = new MemberDTO(memberInfo.getMemberId(), memberInfo.getPhoneNum(), memberInfo.getProfileImg());
 
-        return memberDTO;
+        return new MemberDTO(memberInfo.getMemberId(), memberInfo.getPhoneNum(), memberInfo.getProfileImg());
     }
 
 }
