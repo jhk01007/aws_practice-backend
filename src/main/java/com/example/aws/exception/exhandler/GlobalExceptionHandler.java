@@ -1,9 +1,7 @@
 package com.example.aws.exception.exhandler;
 
 import com.example.aws.dto.ErrorDTO;
-import com.example.aws.exception.MemberIdDuplicateException;
-import com.example.aws.exception.MemberNotFoundException;
-import com.example.aws.exception.PasswordErrorException;
+import com.example.aws.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -37,5 +35,29 @@ public class GlobalExceptionHandler {
         );
 
         return new ResponseEntity<>(errorDTO, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(S3ImageUploadException.class)
+    public ResponseEntity<ErrorDTO> s3ImageUploadExcpetion(RuntimeException e) {
+        ErrorDTO errorDTO = new ErrorDTO(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                e.getClass().toString(),
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(NoSessionException.class)
+    public ResponseEntity<ErrorDTO> noSessionException(RuntimeException e) {
+        ErrorDTO errorDTO = new ErrorDTO(
+                HttpStatus.UNAUTHORIZED.value(),
+                e.getClass().toString(),
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return new ResponseEntity<>(errorDTO, HttpStatus.UNAUTHORIZED);
     }
 }
