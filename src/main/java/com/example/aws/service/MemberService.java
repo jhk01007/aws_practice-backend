@@ -1,6 +1,7 @@
 package com.example.aws.service;
 
 import com.example.aws.domain.Member;
+import com.example.aws.exception.NoSessionException;
 import com.example.aws.repository.MemberRepository;
 import com.example.aws.exception.PasswordErrorException;
 import com.example.aws.exception.MemberNotFoundException;
@@ -51,6 +52,7 @@ public class MemberService {
      * 회원정보 가져오기
      */
     public Member getMemberInfo(Long id) {
+        Optional.ofNullable(id).orElseThrow(() -> new NoSessionException("세션이 만료되었습니다."));
         return memberRepository.findById(id)
                 .orElseThrow(() -> new MemberNotFoundException("해당 회원을 찾을 수 없습니다."));
     }
