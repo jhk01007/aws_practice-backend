@@ -21,22 +21,19 @@ import java.util.Optional;
 @Slf4j
 public class S3Service {
     private final AmazonS3 amazonS3;
-    private final MemberRepository repository;
 
     @Value("${spring.cloud.aws.s3.bucket}")
     private String bucket;
 
-    public S3Service(AmazonS3 amazonS3, MemberRepository repository) {
+    public S3Service(AmazonS3 amazonS3) {
         this.amazonS3 = amazonS3;
-        this.repository = repository;
     }
 
     /**
      * S3에 이미지 업로드 하기
      */
     @Transactional
-    public String uploadImage(MultipartFile image, Long id) {
-        Member member = checkException(id);
+    public String  uploadImage(MultipartFile image, Member member) {
 
         // 파일 확장자 추출
         String extension = getImageExtension(image);
@@ -59,18 +56,13 @@ public class S3Service {
         // S3에 파일 업로드
         amazonS3.putObject(putObjectRequest);
 
-        // 업로드 후 데이터베이스에 URL 업데이트
+        // 업로드 후 멤버 객체에 URL 할당
         String publicUrl = getPublicUrl(fileName);
         member.setProfileImg(publicUrl);
 
         return publicUrl;
     }
 
-    private Member checkException(Long id) {
-        Optional.ofNullable(id).orElseThrow(() -> new NoSessionException("세션이 만료되었습니다."));
-        return repository.findById(id)
-                .orElseThrow(() -> new MemberNotFoundException("해당 회원을 찾을 수 없습니다."));
-    }
 
     private String getImageExtension(MultipartFile image) {
         String extension = "";

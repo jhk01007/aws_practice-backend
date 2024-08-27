@@ -33,8 +33,10 @@ public class MemberController {
         String phone_num = signupDTO.getPhoneNum();
         MultipartFile image = signupDTO.getImage();
 
-        Member sigupMember = memberService.signup(new Member(memberId, password, phone_num));
-        if(image!= null) s3Service.uploadImage(image, sigupMember.getId());
+        Member member = new Member(memberId, password, phone_num);
+
+        if(image!= null) s3Service.uploadImage(image, member); // 이미지 업로드
+        memberService.signup(member); // 회원가입
 
         return ResponseEntity.ok("SIGNUP_SUCCESS");
     }
@@ -70,7 +72,7 @@ public class MemberController {
     public ResponseEntity<String> changeProfileImage(@ModelAttribute ChangeProfileImageDTO imageDTO, HttpSession session) {
         MultipartFile image = imageDTO.getImage();
         Long login_id = (Long) session.getAttribute("member");
-        String newImgUrl = s3Service.uploadImage(image, login_id);
+        String newImgUrl = s3Service.uploadImage(image, memberService.getMemberInfo(login_id));
 
         return ResponseEntity.ok(newImgUrl);
     }
