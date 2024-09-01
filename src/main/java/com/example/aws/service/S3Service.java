@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -35,9 +36,14 @@ public class S3Service {
     @Transactional
     public String  uploadImage(MultipartFile image, Member member) {
 
+
+        // 기존의 프로필 이미지가 있었다면 삭제
+        if(member.getProfileImg() != null)
+            amazonS3.deleteObject(bucket, getImageKey(member.getProfileImg()));
+
         // 파일 확장자 추출
         String extension = getImageExtension(image);
-        String fileName = member.getMemberId() + "_profile" + extension;
+        String fileName = UUID.randomUUID() + "_" + member.getMemberId() + "_profile" + extension;
 
         // 메타데이터 설정
         ObjectMetadata metadata = new ObjectMetadata();
@@ -76,6 +82,10 @@ public class S3Service {
 
     private String getPublicUrl(String imageName) {
         return String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, amazonS3.getRegionName(), imageName);
+    }
+
+    private String getImageKey(String imageUrl) {
+        return imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
     }
 
 }

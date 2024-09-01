@@ -3,6 +3,7 @@ package com.example.aws.controller;
 import com.example.aws.domain.Member;
 import com.example.aws.dto.*;
 import com.example.aws.exception.MemberIdDuplicateException;
+import com.example.aws.exception.NoSessionException;
 import com.example.aws.service.MemberService;
 import com.example.aws.service.S3Service;
 import jakarta.servlet.http.HttpSession;
@@ -12,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/members")
+@CrossOrigin(origins = "http://127.0.0.1:5500", allowCredentials = "true") // 클라이언트의 출처에 맞게 변경
 public class MemberController {
 
     private final MemberService memberService;
@@ -28,6 +30,7 @@ public class MemberController {
      */
     @PostMapping("/signup")
     public ResponseEntity<String> signUp(@ModelAttribute SignupDTO signupDTO) {
+        System.out.println("MemberController.signUp");
         String memberId = signupDTO.getMemberId();
         String password = signupDTO.getPassword();
         String phone_num = signupDTO.getPhoneNum();
@@ -44,13 +47,13 @@ public class MemberController {
     /**
      * 아이디 중복체크
      */
-    @PostMapping("/checkIdDuplicate")
-    public ResponseEntity<Object> checkIdDuplicate(@RequestBody CheckIdDTO checkIdDTO) {
-        String memberId = checkIdDTO.getMemberId();
+    @GetMapping("/checkIdDuplicate")
+    public CheckIdDuplicateDTO checkIdDuplicate(@RequestParam("memberId") String memberId) {
+        System.out.println("MemberController.checkIdDuplicate");
         if(memberService.checkIdDuplicate(memberId))
-            throw new MemberIdDuplicateException("중복된 아이디 입니다.");
-
-        return ResponseEntity.ok("USABLE_ID");
+            return new CheckIdDuplicateDTO(false);
+        else
+            return new CheckIdDuplicateDTO(true);
     }
 
 
@@ -58,12 +61,27 @@ public class MemberController {
      * 로그인
      */
     @PostMapping("/login")
-    public ResponseEntity<Object> login(@RequestBody LoginDTO loginDto, HttpSession session) {
+    public ResponseEntity<?> login(@RequestBody LoginDTO loginDto, HttpSession session) {
         Member loginMember = memberService.login(loginDto.getMemberId(), loginDto.getPassword());
         session.setAttribute("member", loginMember.getId());
 
         return ResponseEntity.ok("LOGIN_SUCCESS");
     }
+
+    /**
+     * 세션 검증
+     */
+    @GetMapping("/check-session")
+    public SessionDTO checkSession(HttpSession session) {
+        System.out.println("요청");
+        Long memberId = (Long) session.getAttribute("member");
+        System.out.println(memberId);
+        if(memberId != null) {
+            return new SessionDTO(memberService.getMemberInfo(memberId).getMemberId(), true);
+        } else
+            return new SessionDTO(null, false);
+    }
+
 
     /**
      * 프로필 사진  변경
@@ -72,7 +90,8 @@ public class MemberController {
     public ResponseEntity<String> changeProfileImage(@ModelAttribute ChangeProfileImageDTO imageDTO, HttpSession session) {
         MultipartFile image = imageDTO.getImage();
         Long login_id = (Long) session.getAttribute("member");
-        String newImgUrl = s3Service.uploadImage(image, memberService.getMemberInfo(login_id));
+        Member memberInfo = memberService.getMemberInfo(login_id);
+        String newImgUrl = s3Service.uploadImage(image, memberInfo);
 
         return ResponseEntity.ok(newImgUrl);
     }
@@ -88,4 +107,9 @@ public class MemberController {
         return new MemberDTO(memberInfo.getMemberId(), memberInfo.getPhoneNum(), memberInfo.getProfileImg());
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpSession session) {
+        session.invalidate();
+        return ResponseEntity.ok("LOGOUT_SUCCESS");
+    }
 }
