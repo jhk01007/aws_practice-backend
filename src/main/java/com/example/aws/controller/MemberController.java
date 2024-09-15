@@ -13,7 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/members")
-@CrossOrigin(origins = "http://127.0.0.1:5500", allowCredentials = "true") // 클라이언트의 출처에 맞게 변경
+@CrossOrigin(origins = "http://127.0.0.1:5500", allowCredentials = "true")
 public class MemberController {
 
     private final MemberService memberService;
