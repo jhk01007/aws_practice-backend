@@ -36,7 +36,7 @@ public class S3Service {
     @Transactional
     public String  uploadImage(MultipartFile image, Member member) {
 
-
+        System.out.println("hello world");
         // 기존의 프로필 이미지가 있었다면 삭제
         if(member.getProfileImg() != null)
             amazonS3.deleteObject(bucket, getImageKey(member.getProfileImg()));
