@@ -30,6 +30,12 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
+
+      # Jacoco 리포트 파일이 제대로 생성되었는지 확인하는 단계 추가
+      - name: Check if Jacoco report is generated
+        run: ls -al build/reports/jacoco/test/
+
+
       - name: Cache Gradle packages
         uses: actions/cache@v4
         with:

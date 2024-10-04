@@ -5,6 +5,7 @@ plugins {
 	id "org.sonarqube" version "4.4.1.3373"
 	id "jacoco"
 }
+
 jacocoTestReport {
 	dependsOn test
 	reports {
@@ -63,9 +64,6 @@ dependencies {
 }
 
 tasks.named('test') {
-	finalizedBy jacocoTestReport  // 테스트가 끝난 후에 Jacoco 리포트 생성
+	useJUnitPlatform()
 }
 
-tasks.named('sonarqube') {
-	dependsOn jacocoTestReport  // Sonar 분석 전에 Jacoco 리포트가 생성되도록 설정
-}
