@@ -6,16 +6,24 @@ plugins {
 	id "jacoco"
 }
 jacocoTestReport {
+	dependsOn test
 	reports {
 		xml.required = true
+		xml.outputLocation = layout.buildDirectory.file("reports/jacoco/test/jacocoTestReport.xml")
+		html.required = true  // HTML 리포트를 생성하도록 설정
+		csv.required = false
 	}
 }
+
+
+
 
 sonar {
 	properties {
 		property "sonar.projectKey", "jhk01007_aws_practice-backend"
 		property "sonar.organization", "jhk01007"
 		property "sonar.host.url", "https://sonarcloud.io"
+		property "sonar.coverage.jacoco.xmlReportPaths", layout.buildDirectory.file("reports/jacoco/test/jacocoTestReport.xml")
 	}
 }
 

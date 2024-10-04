@@ -46,13 +46,13 @@ class MemberServiceTest {
                 .isInstanceOf(MemberNotFoundException.class);
     }
 
-//    @Test
-//    void login_password_error() {
-//        Member member = new Member("kim", "1234","01012345678");
-//        memberService.signup(member);
-//        assertThatThrownBy(() -> memberService.login("kim", "123456"))
-//                .isInstanceOf(PasswordErrorException.class);
-//    }
+    @Test
+    void login_password_error() {
+        Member member = new Member("kim", "1234","01012345678");
+        memberService.signup(member);
+        assertThatThrownBy(() -> memberService.login("kim", "123456"))
+                .isInstanceOf(PasswordErrorException.class);
+    }
 
     @Test
     void login_success() {
