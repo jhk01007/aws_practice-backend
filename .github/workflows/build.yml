@@ -39,7 +39,7 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle
 
       - name: Build
-        run: ./gradlew clean build
+        run: ./gradlew build
 
       - name: sonarqube analyze
         env:
