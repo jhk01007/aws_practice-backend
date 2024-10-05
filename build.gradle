@@ -6,22 +6,27 @@ plugins {
 	id "jacoco"
 }
 
+def jacocoDir = layout.buildDirectory.dir("reports/")
+
 jacocoTestReport {
-	dependsOn test
+	dependsOn test	// 테스트가 수행되어야만 report를 생성할 수 있도록 설정
 	reports {
-		xml.required = true
-		xml.outputLocation.set(layout.buildDirectory.file("reports/jacoco/test/jacocoTestReport.xml"))  // 최신 방식으로 변경
-		html.required = true  // HTML 리포트를 생성하도록 설정
-		csv.required = false
+		html.required.set(true)
+		xml.required.set(true)
+		csv.required.set(true)
+		html.destination jacocoDir.get().file("jacoco/index.html").asFile
+		xml.destination jacocoDir.get().file("jacoco/index.xml").asFile
+		csv.destination jacocoDir.get().file("jacoco/index.csv").asFile
 	}
+
 }
+
 
 sonar {
 	properties {
 		property "sonar.projectKey", "jhk01007_aws_practice-backend"
 		property "sonar.organization", "jhk01007"
 		property "sonar.host.url", "https://sonarcloud.io"
-		property "sonar.coverage.jacoco.xmlReportPaths", layout.buildDirectory.file("reports/jacoco/test/jacocoTestReport.xml").get().asFile.absolutePath
 	}
 }
 
@@ -62,5 +67,6 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy 'jacocoTestReport'
 }
 
